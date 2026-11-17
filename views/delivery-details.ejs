@@ -1,0 +1,25 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delivery Details</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <main class="container">
+        <h1>Delivery Details</h1>
+
+        <p><strong>Delivery ID:</strong> <%= delivery.id %></p>
+        <p><strong>Customer:</strong> <%= delivery.customerName %></p>
+        <p><strong>Address:</strong> <%= delivery.address %></p>
+        <p><strong>Phone:</strong> <%= delivery.phone %></p>
+        <p><strong>Tank Size:</strong> <%= delivery.tankSize %> L</p>
+        <p><strong>Quantity:</strong> <%= delivery.quantity %></p>
+        <p><strong>Delivery Date:</strong> <%= delivery.deliveryDate %></p>
+        <p><strong>Status:</strong> <%= delivery.status %></p>
+
+        <a href="/deliveries">Back to Deliveries</a>
+    </main>
+</body>
+</html>

@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Deliveries</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Water Tank Deliveries</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/deliveries">Deliveries</a>
+            <a href="/add-delivery">Add Delivery</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h2>Delivery Records</h2>
+
+        <form action="/deliveries" method="GET">
+            <input
+                type="text"
+                name="search"
+                placeholder="Search customer name"
+                value="<%= search || '' %>"
+            >
+
+            <select name="status">
+                <option value="">All Status</option>
+                <option value="Pending"
+                    <%= status === "Pending" ? "selected" : "" %>>
+                    Pending
+                </option>
+                <option value="Delivered"
+                    <%= status === "Delivered" ? "selected" : "" %>>
+                    Delivered
+                </option>
+            </select>
+
+            <button type="submit">Search</button>
+        </form>
+
+        <% if (deliveries.length === 0) { %>
+            <p>No deliveries found.</p>
+        <% } %>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Address</th>
+                    <th>Tank Size</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <% deliveries.forEach(delivery => { %>
+                    <tr>
+                        <td><%= delivery.id %></td>
+                        <td><%= delivery.customerName %></td>
+                        <td><%= delivery.address %></td>
+                        <td><%= delivery.tankSize %> L</td>
+                        <td><%= delivery.quantity %></td>
+                        <td><%= delivery.status %></td>
+                        <td>
+                            <a href="/deliveries/<%= delivery.id %>">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>
