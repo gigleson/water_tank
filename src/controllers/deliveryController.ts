@@ -1,61 +1,67 @@
 
 import { Request, Response } from "express";
-import mongoose from "mongoose";
-import DeliveryModel from "../models/mongodb_delivery";
+import { db } from "../prisma/db";
+import { and, all } from "@prisma/orm-postgres/orm-client";
 
 // Home page
 export const getHome = (req: Request, res: Response): void => {
     res.render("index");
 };
 
-// Display all deliveries and search
+// Display all deliveries, with search and status filters
 export const getDeliveries = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     try {
-        const { status, search } = req.query;
+        const status =
+            typeof req.query.status === "string"
+                ? req.query.status
+                : "";
 
-        const filter: Record<string, any> = {};
+        const search =
+            typeof req.query.search === "string"
+                ? req.query.search.trim()
+                : "";
 
-        if (typeof status === "string" && status.trim()) {
-            filter.status = status;
-        }
-
-        if (typeof search === "string" && search.trim()) {
-            filter.customerName = {
-                $regex: search.trim(),
-                $options: "i"
-            };
-        }
-
-        const deliveries = await DeliveryModel.find(filter);
+        const deliveries = await db.orm.public.Delivery
+            .where((d) =>
+                and(
+                    status ? d.status.eq(status) : all(),
+                    search
+                        ? d.customerName.ilike(`%${search}%`)
+                        : all()
+                )
+            )
+            .all();
 
         res.render("deliveries", {
             deliveries,
-            status: status || "",
-            search: search || ""
+            status,
+            search
         });
-
     } catch (error) {
+        console.error("Error retrieving deliveries:", error);
         res.status(500).send("Failed to retrieve deliveries.");
     }
 };
 
-// Display delivery by MongoDB ID
+// Display one delivery
 export const getDeliveryById = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     try {
-        const id = req.params.id;
+        const id = Number(req.params.id);
 
-        if (!mongoose.isValidObjectId(id)) {
+        if (!Number.isInteger(id) || id <= 0) {
             res.status(400).send("Invalid delivery ID.");
             return;
         }
 
-        const delivery = await DeliveryModel.findById(id);
+        const delivery = await db.orm.public.Delivery
+            .whereUnique({ id })
+            .first();
 
         if (!delivery) {
             res.status(404).send("Delivery not found!");
@@ -63,13 +69,13 @@ export const getDeliveryById = async (
         }
 
         res.render("delivery-details", { delivery });
-
     } catch (error) {
+        console.error("Error retrieving delivery:", error);
         res.status(500).send("Failed to retrieve delivery.");
     }
 };
 
-// Show add delivery form
+// Display add-delivery page
 export const getAddDelivery = (
     req: Request,
     res: Response
@@ -77,7 +83,7 @@ export const getAddDelivery = (
     res.render("add-delivery");
 };
 
-// Create new delivery
+// Create a new delivery
 export const createDelivery = async (
     req: Request,
     res: Response
@@ -92,22 +98,19 @@ export const createDelivery = async (
             deliveryDate
         } = req.body;
 
-        const newDelivery = await DeliveryModel.create({
+        await db.orm.public.Delivery.create({
             customerName,
             address,
             phone,
             tankSize: Number(tankSize),
             quantity: Number(quantity),
-            deliveryDate,
+            deliveryDate: new Date(deliveryDate),
             status: "Pending"
         });
 
-        console.log("New delivery saved:", newDelivery._id);
-
         res.redirect("/deliveries");
-
     } catch (error) {
-        console.error(error);
+        console.error("Error creating delivery:", error);
         res.status(500).send("Failed to create delivery.");
     }
 };
