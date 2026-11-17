@@ -1,87 +1,113 @@
 
 import { Request, Response } from "express";
-import { deliveries } from "../data/deliveries";
+import mongoose from "mongoose";
+import DeliveryModel from "../models/mongodb_delivery";
 
 // Home page
 export const getHome = (req: Request, res: Response): void => {
     res.render("index");
 };
 
-// Display all deliveries
+// Display all deliveries and search
+export const getDeliveries = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const { status, search } = req.query;
 
-export const getDeliveries = (req: Request, res: Response): void => {
-    const { status, search } = req.query;
+        const filter: Record<string, any> = {};
 
-    let filteredDeliveries = [...deliveries];
+        if (typeof status === "string" && status.trim()) {
+            filter.status = status;
+        }
 
-    // Filter only when status has a value
-    if (typeof status === "string" && status.trim() !== "") {
-        filteredDeliveries = filteredDeliveries.filter(
-            delivery =>
-                delivery.status.toLowerCase() === status.trim().toLowerCase()
-        );
+        if (typeof search === "string" && search.trim()) {
+            filter.customerName = {
+                $regex: search.trim(),
+                $options: "i"
+            };
+        }
+
+        const deliveries = await DeliveryModel.find(filter);
+
+        res.render("deliveries", {
+            deliveries,
+            status: status || "",
+            search: search || ""
+        });
+
+    } catch (error) {
+        res.status(500).send("Failed to retrieve deliveries.");
     }
-
-    // Search only when search has a value
-    if (typeof search === "string" && search.trim() !== "") {
-        filteredDeliveries = filteredDeliveries.filter(
-            delivery =>
-                delivery.customerName.toLowerCase().includes(search.trim().toLowerCase())
-        );
-    }
-
-    res.render("deliveries", {
-        deliveries: filteredDeliveries,
-        status: status || "",
-        search: search || ""
-    });
 };
 
+// Display delivery by MongoDB ID
+export const getDeliveryById = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const id = req.params.id;
 
-// Display one delivery using route parameter
-export const getDeliveryById = (req: Request, res: Response): void => {
-    const id = Number(req.params.id);
+        if (!mongoose.isValidObjectId(id)) {
+            res.status(400).send("Invalid delivery ID.");
+            return;
+        }
 
-    const delivery = deliveries.find(item => item.id === id);
+        const delivery = await DeliveryModel.findById(id);
 
-    if (!delivery) {
-        res.status(404).send("Delivery not found!");
-        return;
+        if (!delivery) {
+            res.status(404).send("Delivery not found!");
+            return;
+        }
+
+        res.render("delivery-details", { delivery });
+
+    } catch (error) {
+        res.status(500).send("Failed to retrieve delivery.");
     }
-
-    res.render("delivery-details", { delivery });
 };
 
 // Show add delivery form
-export const getAddDelivery = (req: Request, res: Response): void => {
+export const getAddDelivery = (
+    req: Request,
+    res: Response
+): void => {
     res.render("add-delivery");
 };
 
-// Add new delivery
-export const createDelivery = (req: Request, res: Response): void => {
-    const {
-        customerName,
-        address,
-        phone,
-        tankSize,
-        quantity,
-        deliveryDate
-    } = req.body;
+// Create new delivery
+export const createDelivery = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const {
+            customerName,
+            address,
+            phone,
+            tankSize,
+            quantity,
+            deliveryDate
+        } = req.body;
 
-    const newDelivery = {
-        id: deliveries.length > 0
-            ? Math.max(...deliveries.map(d => d.id)) + 1
-            : 1,
-        customerName,
-        address,
-        phone,
-        tankSize: Number(tankSize),
-        quantity: Number(quantity),
-        deliveryDate,
-        status: "Pending" as const
-    };
+        const newDelivery = await DeliveryModel.create({
+            customerName,
+            address,
+            phone,
+            tankSize: Number(tankSize),
+            quantity: Number(quantity),
+            deliveryDate,
+            status: "Pending"
+        });
 
-    deliveries.push(newDelivery);
+        console.log("New delivery saved:", newDelivery._id);
 
-    res.redirect("/deliveries");
+        res.redirect("/deliveries");
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Failed to create delivery.");
+    }
 };
