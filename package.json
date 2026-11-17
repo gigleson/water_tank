@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "create-admin": "tsx scripts/createAdmin.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,19 +18,25 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@prisma/orm-postgres": "^8.0.0-rc.24",
+    "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^18.0.10",
     "ejs": "^7.0.2",
     "express": "^5.3.0",
+    "express-session": "^1.19.0",
     "pg": "^8.23.1"
   },
   "devDependencies": {
     "@prisma/cli-engine": "^0.10.0",
+    "@types/connect-pg-simple": "^7.0.3",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.6",
+    "@types/express-session": "^1.19.0",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "prisma": "^8.0.0-rc.34",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }
