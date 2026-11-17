@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import { logger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use((req, res, next) => {
 // Application routes
 app.use(authRoutes);
 app.use("/", deliveryRoutes);
+app.use(userRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

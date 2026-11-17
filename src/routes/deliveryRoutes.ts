@@ -20,7 +20,7 @@ router.use(requireAuth);
 router.get("/", getHome);
 
 // Get all deliveries
-router.get("/deliveries",  requireRole('ADMIN'),getDeliveries);
+router.get("/deliveries",getDeliveries);
 
 // Get delivery by ID (route parameter)
 router.get("/deliveries/:id", getDeliveryById);
