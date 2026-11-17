@@ -114,3 +114,32 @@ export const createDelivery = async (
         res.status(500).send("Failed to create delivery.");
     }
 };
+
+// Delete a delivery
+export const deleteDelivery = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            res.status(400).send("Invalid delivery ID.");
+            return;
+        }
+
+        const deletedDelivery = await db.orm.public.Delivery
+            .where({ id })
+            .delete();
+
+        if (!deletedDelivery) {
+            res.status(404).send("Delivery not found.");
+            return;
+        }
+
+        res.redirect("/deliveries");
+    } catch (error) {
+        console.error("Error deleting delivery:", error);
+        res.status(500).send("Failed to delete delivery.");
+    }
+};

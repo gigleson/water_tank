@@ -45,6 +45,14 @@
         <% if (deliveries.length === 0) { %>
             <p>No deliveries found.</p>
         <% } %>
+        <% if (currentUser) { %>
+    <span>Welcome, <%= currentUser.name %></span>
+    <span>Role: <%= currentUser.role %></span>
+
+    <form action="/logout" method="POST">
+        <button type="submit">Logout</button>
+    </form>
+<% } %>
 
         <table>
             <thead>

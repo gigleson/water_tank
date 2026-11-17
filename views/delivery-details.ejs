@@ -18,6 +18,15 @@
         <p><strong>Quantity:</strong> <%= delivery.quantity %></p>
         <p><strong>Delivery Date:</strong> <%= delivery.deliveryDate %></p>
         <p><strong>Status:</strong> <%= delivery.status %></p>
+        <% if (currentUser?.role === 'ADMIN') { %>
+    <form
+        action="/deliveries/<%= delivery.id %>/delete"
+        method="POST"
+        onsubmit="return confirm('Are you sure you want to delete this delivery?')"
+    >
+        <button type="submit">Delete Delivery</button>
+    </form>
+<% } %>
 
         <a href="/deliveries">Back to Deliveries</a>
     </main>
