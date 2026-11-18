@@ -8,10 +8,11 @@ import {
     validateLogin,
     handleValidationErrors
 } from "../middleware/validation.js";
+import { loginLimiter } from "../middleware/rateLimiter.js";
 const router = Router();
 
 router.get('/login', getLogin);
-router.post('/login',    validateLogin,
+router.post('/login',    validateLogin,loginLimiter,
     handleValidationErrors,
     postLogin
  );

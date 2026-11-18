@@ -10,10 +10,12 @@ import { logger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
 import userRoutes from "./routes/userRoutes.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 app.use(helmet());
 
+app.use(generalLimiter);
 
 const allowedOrigins = (
     process.env.CORS_ORIGINS || ""
