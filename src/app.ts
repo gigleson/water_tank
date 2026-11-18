@@ -64,7 +64,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/api", jwtRoutes);
+app.use("/api/v1", jwtRoutes);
 // Application routes
 app.use(authRoutes);
 app.use("/", deliveryRoutes);
