@@ -9,10 +9,11 @@ import {
     deleteApiDelivery
 } from "../controllers/jwtDeliveryController.js";
 import { validateDelivery } from "../middleware/validateDelivery.js";
+import { generalLimiter, loginLimiter } from "../middleware/rateLimiter.js";
 const router = Router();
 
 // JWT login
-router.post("/auth/login", jwtLogin);
+router.post("/auth/login", loginLimiter,jwtLogin);
 
 // Accessible to any authenticated user
 router.get("/profile", requireJwtAuth, (req, res) => {
@@ -36,7 +37,7 @@ router.get(
 // Protected delivery API
 router.get(
     "/deliveries",
-    requireJwtAuth,
+    requireJwtAuth,generalLimiter,
     getApiDeliveries
 );
 
