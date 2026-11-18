@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
 import userRoutes from "./routes/userRoutes.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
+import jwtRoutes from "./routes/jwtRoutes.js";
 
 const app = express();
 app.use(helmet());
@@ -63,6 +64,7 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use("/api", jwtRoutes);
 // Application routes
 app.use(authRoutes);
 app.use("/", deliveryRoutes);

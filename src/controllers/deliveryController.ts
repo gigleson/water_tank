@@ -1,6 +1,6 @@
 
 import { Request, Response } from "express";
-import { db } from "../prisma/db";
+import { db } from "../prisma/db.js";
 import { and, all } from "@prisma/orm-postgres/orm-client";
 
 // Home page

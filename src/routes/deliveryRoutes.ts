@@ -1,6 +1,6 @@
 
 import { Router } from "express";
-import { validateDelivery } from "../middleware/validateDelivery";
+import { validateDelivery } from "../middleware/validateDelivery.js";
 import { requireAuth } from '../middleware/authMiddleware.js';
 
 import {
@@ -10,9 +10,9 @@ import {
     getAddDelivery,
     createDelivery,
     deleteDelivery
-} from "../controllers/deliveryController";
-import { requireRole } from "../middleware/roleMiddleware";
-import { handleValidationErrors } from "../middleware/validation";
+} from "../controllers/deliveryController.js";
+import { requireRole } from "../middleware/roleMiddleware.js";
+import { handleValidationErrors } from "../middleware/validation.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -37,5 +37,6 @@ router.post(
     requireRole("ADMIN"),
     deleteDelivery
 );
+
 
 export default router;

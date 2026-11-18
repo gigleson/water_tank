@@ -1,5 +1,5 @@
 
-import { Delivery } from "../models/delivery";
+import { Delivery } from "../models/delivery.js";
 
 export const deliveries: Delivery[] = [
     {
