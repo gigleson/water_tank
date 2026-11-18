@@ -1,6 +1,8 @@
 
 import express from "express";
 import path from "path";
+import helmet from "helmet";
+import cors from "cors";
 
 import deliveryRoutes from "./routes/deliveryRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -10,7 +12,30 @@ import { sessionMiddleware } from "./config/session.js";
 import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
+app.use(helmet());
 
+
+const allowedOrigins = (
+    process.env.CORS_ORIGINS || ""
+)
+    .split(",")
+    .map(origin => origin.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        // Reject CORS permission without throwing a server error.
+        return callback(null, false);
+    },
+
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false
+}));
 // Set EJS as template engine
 app.set("view engine", "ejs");
 
