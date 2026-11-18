@@ -1,6 +1,10 @@
 
 import { Router } from "express";
 import {
+    validateUser,
+    handleValidationErrors
+} from "../middleware/validation.js";
+import {
     getUsers,
     getAddUser,
     createUser,toggleUserStatus
@@ -15,6 +19,7 @@ router.use(requireRole("ADMIN"));
 
 router.get("/admin/users", getUsers);
 router.get("/admin/users/add", getAddUser);
-router.post("/admin/users", createUser);
+router.post("/admin/users",validateUser,
+    handleValidationErrors, createUser);
 router.post("/admin/users/:id/toggle-status", toggleUserStatus);
 export default router;

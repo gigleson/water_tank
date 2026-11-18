@@ -12,6 +12,7 @@ import {
     deleteDelivery
 } from "../controllers/deliveryController";
 import { requireRole } from "../middleware/roleMiddleware";
+import { handleValidationErrors } from "../middleware/validation";
 
 const router = Router();
 router.use(requireAuth);
@@ -29,7 +30,7 @@ router.get("/deliveries/:id", getDeliveryById);
 router.get("/add-delivery", getAddDelivery);
 
 // Create new delivery
-router.post("/deliveries", validateDelivery,createDelivery);
+router.post("/deliveries", validateDelivery,handleValidationErrors,createDelivery);
 
 router.post(
     "/deliveries/:id/delete",
