@@ -1,30 +1,115 @@
 import type { Request, Response } from "express";
 import { db } from "../prisma/db.js";
+import { and, all } from "@prisma/orm-postgres/orm-client";
 
-// GET all deliveries
+// GET deliveries with pagination
+// GET deliveries with pagination and filtering
 export const getApiDeliveries = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     try {
+        // Pagination
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.min(
+            100,
+            Math.max(1, Number(req.query.limit) || 10)
+        );
+        const offset = (page - 1) * limit;
+
+        // Filtering
+        const status =
+            typeof req.query.status === "string"
+                ? req.query.status.trim()
+                : "";
+
+        const search =
+            typeof req.query.search === "string"
+                ? req.query.search.trim()
+                : "";
+
+        const tankSize =
+            typeof req.query.tankSize === "string"
+                ? Number(req.query.tankSize)
+                : undefined;
+
+        if (
+            tankSize !== undefined &&
+            ![500, 1000, 2000].includes(tankSize)
+        ) {
+            res.status(400).json({
+                message: "Invalid tank size. Choose 500, 1000 or 2000."
+            });
+            return;
+        }
+
+        // Count matching deliveries
+        const countResult = await db.orm.public.Delivery
+            .where((d) =>
+                and(
+                    status ? d.status.eq(status) : all(),
+                    search
+                        ? d.customerName.ilike(`%${search}%`)
+                        : all(),
+                    tankSize !== undefined
+                        ? d.tankSize.eq(tankSize)
+                        : all()
+                )
+            )
+            .aggregate((a) => ({
+                total: a.count()
+            }));
+
+        // Retrieve matching deliveries
         const deliveries = await db.orm.public.Delivery
+            .where((d) =>
+                and(
+                    status ? d.status.eq(status) : all(),
+                    search
+                        ? d.customerName.ilike(`%${search}%`)
+                        : all(),
+                    tankSize !== undefined
+                        ? d.tankSize.eq(tankSize)
+                        : all()
+                )
+            )
+            .orderBy([
+                (d) => d.createdAt.desc(),
+                (d) => d.id.desc()
+            ])
             .select(
-        "id",
-        "customerName",
-        "address",
-        "phone",
-        "tankSize",
-        "quantity",
-        "deliveryDate",
-        "status",
-        "createdAt",
-        "updatedAt"
-    )
-    .all();
+                "id",
+                "customerName",
+                "address",
+                "phone",
+                "tankSize",
+                "quantity",
+                "deliveryDate",
+                "status",
+                "createdAt",
+                "updatedAt"
+            )
+            .limit(limit)
+            .offset(offset)
+            .all();
+
+        const total = Number(countResult.total);
 
         res.status(200).json({
             message: "Deliveries retrieved successfully.",
-            count: deliveries.length,
+            filters: {
+                status: status || null,
+                search: search || null,
+                tankSize: tankSize ?? null
+            },
+            pagination: {
+                currentPage: page,
+                limit,
+                totalRecords: total,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
+                hasPreviousPage: page > 1
+            },
             deliveries
         });
 
@@ -36,7 +121,6 @@ export const getApiDeliveries = async (
         });
     }
 };
-
 // GET delivery by ID
 export const getApiDeliveryById = async (
     req: Request,
