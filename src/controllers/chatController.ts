@@ -130,3 +130,73 @@ export const getMessages = async (
         });
     }
 };
+export const getConversations = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const userId = req.authUser?.id;
+
+        if (!userId) {
+            res.status(401).json({ message: "Unauthorized." });
+            return;
+        }
+
+        const messages = await db.orm.public.ChatMessage
+            .where((message) =>
+                or(
+                    message.senderId.eq(userId),
+                    message.receiverId.eq(userId)
+                )
+            )
+            .orderBy((message) => message.createdAt.desc())
+            .all();
+
+        const conversationUserIds = [
+            ...new Set(
+                messages.map((message) =>
+                    message.senderId === userId
+                        ? message.receiverId
+                        : message.senderId
+                )
+            )
+        ];
+
+        const conversations = await Promise.all(
+            conversationUserIds.map(async (otherUserId) => {
+                const user = await db.orm.public.User
+                    .whereUnique({ id: otherUserId })
+                    .first();
+
+                if (!user || !user.isActive) return null;
+
+                const latestMessage = messages.find(
+                    (message) =>
+                        (message.senderId === userId &&
+                            message.receiverId === otherUserId) ||
+                        (message.senderId === otherUserId &&
+                            message.receiverId === userId)
+                );
+
+                return {
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email
+                    },
+                    latestMessage
+                };
+            })
+        );
+
+        res.status(200).json({
+            data: conversations.filter(Boolean)
+        });
+
+    } catch (error) {
+        console.error("Get conversations error:", error);
+        res.status(500).json({
+            message: "Failed to retrieve conversations."
+        });
+    }
+};
