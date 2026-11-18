@@ -4,6 +4,7 @@ import path from "path";
 import helmet from "helmet";
 import cors from "cors";
 
+
 import deliveryRoutes from "./routes/deliveryRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import { logger } from "./middleware/logger.js";
@@ -12,6 +13,7 @@ import { sessionMiddleware } from "./config/session.js";
 import userRoutes from "./routes/userRoutes.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import jwtRoutes from "./routes/jwtRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 app.use(helmet());
@@ -65,6 +67,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/v1", jwtRoutes);
+app.use("/api/v1/chat", chatRoutes);
 // Application routes
 app.use(authRoutes);
 app.use("/", deliveryRoutes);

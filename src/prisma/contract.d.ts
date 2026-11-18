@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'f1601424688d72af3bec5dc94f028d04f8854d35c5d2e5bbf68b8ded95a6c431'>;
+  StorageHashBase<'965b728f1ddd793880be309ee145b69388d8b339c43cd6a4b8ac6e952f47f2e4'>;
 export type ExecutionHash =
   ExecutionHashBase<'2b48b69c4c7a4883b807d4369377bf87d3345af0e31306742a2bf03db1404a1d'>;
 export type ProfileHash =
@@ -309,6 +309,16 @@ export type StorageColumnInputTypes = ColumnTypesFromStorage<
 >;
 
 export namespace Models {
+  export type public_ChatMessage = {
+    content: FieldOutputTypes['public']['ChatMessage']['content'];
+    createdAt: FieldOutputTypes['public']['ChatMessage']['createdAt'];
+    id: FieldOutputTypes['public']['ChatMessage']['id'];
+    receiverId: FieldOutputTypes['public']['ChatMessage']['receiverId'];
+    senderId: FieldOutputTypes['public']['ChatMessage']['senderId'];
+    receiver: public_User;
+    sender: public_User;
+    readonly [RelationKeys]?: 'receiver' | 'sender';
+  };
   export type public_Delivery = {
     address: FieldOutputTypes['public']['Delivery']['address'];
     createdAt: FieldOutputTypes['public']['Delivery']['createdAt'];
@@ -331,12 +341,15 @@ export namespace Models {
     passwordHash: FieldOutputTypes['public']['User']['passwordHash'];
     role: FieldOutputTypes['public']['User']['role'];
     updatedAt: FieldOutputTypes['public']['User']['updatedAt'];
-    readonly [RelationKeys]?: never;
+    receivedMessages: public_ChatMessage[];
+    sentMessages: public_ChatMessage[];
+    readonly [RelationKeys]?: 'receivedMessages' | 'sentMessages';
   };
 }
 
 export declare const models: {
   public: {
+    ChatMessage: Models.public_ChatMessage;
     Delivery: Models.public_Delivery;
     User: Models.public_User;
   };
@@ -360,6 +373,94 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly chat_messages: {
+              columns: {
+                readonly content: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly receiverId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly senderId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'chat_messages_receiverId_idx_fe124f44';
+                  readonly prefix: 'chat_messages_receiverId_idx';
+                  readonly columns: readonly ['receiverId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'chat_messages_senderId_idx_4689c490';
+                  readonly prefix: 'chat_messages_senderId_idx';
+                  readonly columns: readonly ['senderId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'chat_messages_senderId_receiverId_createdAt_idx_4312a90b';
+                  readonly prefix: 'chat_messages_senderId_receiverId_createdAt_idx';
+                  readonly columns: readonly ['senderId', 'receiverId', 'createdAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'chat_messages';
+                    readonly columns: readonly ['senderId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'users';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'chat_messages';
+                    readonly columns: readonly ['receiverId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'users';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly Delivery: {
               columns: {
                 readonly address: {
@@ -523,12 +624,75 @@ type ContractBase = Omit<
   readonly targetFamily: 'sql';
   readonly roots: {
     readonly Delivery: { readonly namespace: 'public' & NamespaceId; readonly model: 'Delivery' };
+    readonly chat_messages: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'ChatMessage';
+    };
     readonly users: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
   };
   readonly domain: {
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly ChatMessage: {
+            readonly fields: {
+              readonly content: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly receiverId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly senderId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly receiver: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['receiverId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly sender: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['senderId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'chat_messages';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly content: { readonly column: 'content' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly receiverId: { readonly column: 'receiverId' };
+                readonly senderId: { readonly column: 'senderId' };
+              };
+            };
+          };
           readonly Delivery: {
             readonly fields: {
               readonly address: {
@@ -645,7 +809,30 @@ type ContractBase = Omit<
                 };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly receivedMessages: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ChatMessage';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['receiverId'];
+                };
+              };
+              readonly sentMessages: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ChatMessage';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['senderId'];
+                };
+              };
+            };
             readonly storage: {
               readonly table: 'users';
               readonly namespaceId: 'public';
@@ -742,16 +929,3 @@ type ContractBase = Omit<
 export type Contract = ContractWithTypeMaps<ContractBase, TypeMaps>;
 
 export type Namespaces = Contract['storage']['namespaces'];
-import 'dotenv/config';
-import { Pool } from 'pg';
-
-export const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
-});
-
-pool.on('error', (error) => {
-    console.error('Unexpected PostgreSQL error:', error);
-});

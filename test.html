@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Socket Test</title>
+</head>
+<body>
+    <h2>Socket.IO Chat Test</h2>
+    <input id="token" placeholder="Enter JWT token">
+    <button onclick="connectSocket()">Connect</button>
+
+    <h3>Received Messages</h3>
+    <pre id="messages"></pre>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+
+    <script>
+        let socket;
+
+        function connectSocket() {
+            const token = document.getElementById("token").value;
+
+            socket = io("http://localhost:3000", {
+                auth: { token }
+            });
+
+            socket.on("connect", () => {
+                document.getElementById("messages").textContent +=
+                    "Connected successfully!\n";
+            });
+
+            socket.on("new_message", (message) => {
+                document.getElementById("messages").textContent +=
+                    JSON.stringify(message, null, 2) + "\n";
+            });
+
+            socket.on("connect_error", (error) => {
+                document.getElementById("messages").textContent +=
+                    "Error: " + error.message + "\n";
+            });
+        }
+    </script>
+</body>
+</html>

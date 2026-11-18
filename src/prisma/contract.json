@@ -8,6 +8,10 @@
       "model": "Delivery",
       "namespace": "public"
     },
+    "chat_messages": {
+      "model": "ChatMessage",
+      "namespace": "public"
+    },
     "users": {
       "model": "User",
       "namespace": "public"
@@ -17,6 +21,103 @@
     "namespaces": {
       "public": {
         "models": {
+          "ChatMessage": {
+            "fields": {
+              "content": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "receiverId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "senderId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "receiver": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "receiverId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              },
+              "sender": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "senderId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "content": {
+                  "column": "content"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "receiverId": {
+                  "column": "receiverId"
+                },
+                "senderId": {
+                  "column": "senderId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "chat_messages"
+            }
+          },
           "Delivery": {
             "fields": {
               "address": {
@@ -202,7 +303,38 @@
                 }
               }
             },
-            "relations": {},
+            "relations": {
+              "receivedMessages": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "receiverId"
+                  ]
+                },
+                "to": {
+                  "model": "ChatMessage",
+                  "namespace": "public"
+                }
+              },
+              "sentMessages": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "senderId"
+                  ]
+                },
+                "to": {
+                  "model": "ChatMessage",
+                  "namespace": "public"
+                }
+              }
+            },
             "storage": {
               "fields": {
                 "createdAt": {
@@ -326,6 +458,122 @@
               },
               "uniques": []
             },
+            "chat_messages": {
+              "columns": {
+                "content": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-date@1",
+                  "dataType": "pg/timestamptz",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "id": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nullable": false
+                },
+                "receiverId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                },
+                "senderId": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "index": {
+                    "name": "chat_messages_senderId_idx_4689c490"
+                  },
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "senderId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "chat_messages"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "users"
+                  }
+                },
+                {
+                  "index": {
+                    "name": "chat_messages_receiverId_idx_fe124f44"
+                  },
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "receiverId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "chat_messages"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "users"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "receiverId"
+                  ],
+                  "name": "chat_messages_receiverId_idx_fe124f44",
+                  "prefix": "chat_messages_receiverId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "senderId"
+                  ],
+                  "name": "chat_messages_senderId_idx_4689c490",
+                  "prefix": "chat_messages_senderId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "senderId",
+                    "receiverId",
+                    "createdAt"
+                  ],
+                  "name": "chat_messages_senderId_receiverId_createdAt_idx_4312a90b",
+                  "prefix": "chat_messages_senderId_receiverId_createdAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "users": {
               "columns": {
                 "createdAt": {
@@ -412,7 +660,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "f1601424688d72af3bec5dc94f028d04f8854d35c5d2e5bbf68b8ded95a6c431"
+    "storageHash": "965b728f1ddd793880be309ee145b69388d8b339c43cd6a4b8ac6e952f47f2e4"
   },
   "execution": {
     "executionHash": "2b48b69c4c7a4883b807d4369377bf87d3345af0e31306742a2bf03db1404a1d",

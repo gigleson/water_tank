@@ -1,5 +1,4 @@
 
-
 // use prisma-8
 
 model Delivery {
@@ -12,19 +11,35 @@ model Delivery {
   deliveryDate DateTime
   status       String   @default("Pending")
   createdAt    DateTime @default(now())
-  updatedAt DateTime @onCreate(now()) @onUpdate(now())
+  updatedAt    DateTime @onCreate(now()) @onUpdate(now())
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         String   @default("STAFF")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @onCreate(now()) @onUpdate(now())
+  id              Int           @id @default(autoincrement())
+  name            String
+  email           String        @unique
+  passwordHash    String
+  role            String        @default("STAFF")
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @onCreate(now()) @onUpdate(now())
+
+  sentMessages     ChatMessage[] @relation("MessageSender")
+  receivedMessages ChatMessage[] @relation("MessageReceiver")
 
   @@map("users")
 }
 
+model ChatMessage {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  createdAt  DateTime @default(now())
+
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, receiverId, createdAt])
+  @@map("chat_messages")
+}
