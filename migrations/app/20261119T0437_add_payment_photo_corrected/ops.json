@@ -1,0 +1,62 @@
+[
+  {
+    "id": "column.public.Delivery.paymentPhotoPath",
+    "label": "Add column \"paymentPhotoPath\" to \"Delivery\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paymentPhotoPath",
+        "table": "Delivery"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"paymentPhotoPath\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Delivery",
+          "paymentPhotoPath"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"paymentPhotoPath\" on \"Delivery\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"paymentPhotoPath\"",
+        "sql": "ALTER TABLE \"public\".\"Delivery\" ADD COLUMN \"paymentPhotoPath\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paymentPhotoPath\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Delivery",
+          "paymentPhotoPath"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"paymentPhotoPath\" on \"Delivery\""
+        }
+      },
+      {
+        "description": "verify column \"paymentPhotoPath\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Delivery",
+          "paymentPhotoPath",
+          "text"
+        ]
+      }
+    ]
+  }
+]

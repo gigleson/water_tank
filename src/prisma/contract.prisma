@@ -2,16 +2,17 @@
 // use prisma-8
 
 model Delivery {
-  id           Int      @id @default(autoincrement())
-  customerName String
-  address      String
-  phone        String
-  tankSize     Int
-  quantity     Int
-  deliveryDate DateTime
-  status       String   @default("Pending")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @onCreate(now()) @onUpdate(now())
+  id               Int      @id @default(autoincrement())
+  customerName     String
+  address          String
+  phone            String
+  tankSize         Int
+  quantity         Int
+  deliveryDate     DateTime
+  status           String   @default("Pending")
+  paymentPhotoPath String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @onCreate(now()) @onUpdate(now())
 }
 
 model User {

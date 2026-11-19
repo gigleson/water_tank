@@ -161,6 +161,13 @@
                   "kind": "scalar"
                 }
               },
+              "paymentPhotoPath": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "phone": {
                 "nullable": false,
                 "type": {
@@ -217,6 +224,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "paymentPhotoPath": {
+                  "column": "paymentPhotoPath"
                 },
                 "phone": {
                   "column": "phone"
@@ -415,6 +425,11 @@
                     "kind": "function"
                   },
                   "nullable": false
+                },
+                "paymentPhotoPath": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
                 },
                 "phone": {
                   "codecId": "pg/text@1",
@@ -660,7 +675,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "965b728f1ddd793880be309ee145b69388d8b339c43cd6a4b8ac6e952f47f2e4"
+    "storageHash": "07a5849b86e423a2910e292f7e7449ac3e6a769cc7a0fb7ef60b197c7ea6e447"
   },
   "execution": {
     "executionHash": "2b48b69c4c7a4883b807d4369377bf87d3345af0e31306742a2bf03db1404a1d",

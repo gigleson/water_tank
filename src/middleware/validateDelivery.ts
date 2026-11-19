@@ -37,9 +37,17 @@ export const validateDelivery = [
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
-            res.status(400).send(
-                errors.array().map(error => error.msg).join(", ")
-            );
+            const formattedErrors = errors.array().map(error => ({
+                field: error.type === "field" ? error.path : "request",
+                message: error.msg
+            }));
+
+            res.status(400).json({
+                success: false,
+                message: "Validation failed.",
+                errors: formattedErrors
+            });
+
             return;
         }
 

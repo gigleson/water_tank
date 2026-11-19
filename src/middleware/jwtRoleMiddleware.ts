@@ -1,25 +1,30 @@
+
 import type { Request, Response, NextFunction } from "express";
+import { ApiError } from "../utils/ApiError.js";
 
 export const requireJwtRole = (
     ...allowedRoles: ("ADMIN" | "STAFF")[]
 ) => {
     return (
         req: Request,
-        res: Response,
+        _res: Response,
         next: NextFunction
     ): void => {
 
+        // Check authentication
         if (!req.authUser) {
-            res.status(401).json({
-                message: "Authentication required."
-            });
+            next(new ApiError(401, "Authentication required."));
             return;
         }
 
+        // Check authorization
         if (!allowedRoles.includes(req.authUser.role)) {
-            res.status(403).json({
-                message: "Access denied. You do not have permission."
-            });
+            next(
+                new ApiError(
+                    403,
+                    "Access denied. You do not have permission."
+                )
+            );
             return;
         }
 

@@ -1,6 +1,9 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
+import { ApiError } from "../utils/ApiError.js";
 import { db } from "../prisma/db.js";
 import { and, all } from "@prisma/orm-postgres/orm-client";
+import fs from "fs/promises";
+import path from "path";
 
 // GET deliveries with pagination
 // GET deliveries with pagination and filtering
@@ -122,18 +125,17 @@ export const getApiDeliveries = async (
     }
 };
 // GET delivery by ID
+
 export const getApiDeliveryById = async (
     req: Request,
-    res: Response
+    res: Response,
+    next: NextFunction
 ): Promise<void> => {
     try {
         const id = Number(req.params.id);
 
         if (!Number.isInteger(id) || id <= 0) {
-            res.status(400).json({
-                message: "Invalid delivery ID."
-            });
-            return;
+            throw new ApiError(400, "Invalid delivery ID.");
         }
 
         const delivery = await db.orm.public.Delivery
@@ -141,25 +143,20 @@ export const getApiDeliveryById = async (
             .first();
 
         if (!delivery) {
-            res.status(404).json({
-                message: "Delivery not found."
-            });
-            return;
+            throw new ApiError(404, "Delivery not found.");
         }
 
         res.status(200).json({
+            success: true,
             message: "Delivery retrieved successfully.",
             delivery
         });
 
     } catch (error) {
-        console.error("API delivery error:", error);
-
-        res.status(500).json({
-            message: "Failed to retrieve delivery."
-        });
+        next(error);
     }
 };
+
 // Create a delivery through JWT API
 export const createApiDelivery = async (
     req: Request,
@@ -296,5 +293,129 @@ export const deleteApiDelivery = async (
         res.status(500).json({
             message: "Failed to delete delivery."
         });
+    }
+};
+
+
+
+// Upload payment photo
+export const uploadDeliveryPaymentPhoto = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    let uploadedFilePath: string | undefined;
+
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            throw new ApiError(400, "Invalid delivery ID.");
+        }
+
+        if (!req.file) {
+            throw new ApiError(400, "Payment photo is required.");
+        }
+
+        uploadedFilePath = req.file.path;
+
+        const delivery = await db.orm.public.Delivery
+            .whereUnique({ id })
+            .first();
+
+        if (!delivery) {
+            throw new ApiError(404, "Delivery not found.");
+        }
+
+        if (delivery.paymentPhotoPath) {
+            throw new ApiError(
+                409,
+                "A payment photo already exists for this delivery."
+            );
+        }
+
+        const relativePath = path.posix.join(
+            "uploads",
+            "payment-photos",
+            req.file.filename
+        );
+
+        await db.orm.public.Delivery
+            .where({ id })
+            .update({
+                paymentPhotoPath: relativePath
+            });
+
+        res.status(201).json({
+            message: "Payment photo uploaded successfully.",
+            deliveryId: id
+        });
+
+    } catch (error) {
+        if (uploadedFilePath) {
+            await fs.unlink(uploadedFilePath).catch(() => {});
+        }
+
+        next(error);
+    }
+};
+export const getDeliveryPaymentPhoto = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            throw new ApiError(400, "Invalid delivery ID.");
+        }
+
+        const delivery = await db.orm.public.Delivery
+            .whereUnique({ id })
+            .first();
+
+        if (!delivery) {
+            throw new ApiError(404, "Delivery not found.");
+        }
+
+        if (!delivery.paymentPhotoPath) {
+            throw new ApiError(
+                404,
+                "No payment photo found for this delivery."
+            );
+        }
+
+        const uploadDirectory = path.resolve(
+            process.cwd(),
+            "uploads",
+            "payment-photos"
+        );
+
+        const filePath = path.resolve(
+            process.cwd(),
+            delivery.paymentPhotoPath
+        );
+
+        if (!filePath.startsWith(uploadDirectory + path.sep)) {
+            throw new ApiError(400, "Invalid payment photo path.");
+        }
+
+        await fs.access(filePath);
+
+        res.setHeader("Cache-Control", "private, no-store");
+        res.sendFile(filePath, (error) => {
+            if (error && !res.headersSent) {
+                next(error);
+            }
+        });
+
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            next(new ApiError(404, "Payment photo file not found."));
+            return;
+        }
+
+        next(error);
     }
 };

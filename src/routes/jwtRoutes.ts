@@ -6,8 +6,12 @@ import {
     getApiDeliveries,
     getApiDeliveryById,createApiDelivery,
     updateApiDelivery,
-    deleteApiDelivery
+    deleteApiDelivery,
+    uploadDeliveryPaymentPhoto,
+    getDeliveryPaymentPhoto
 } from "../controllers/jwtDeliveryController.js";
+
+import { paymentPhotoUpload } from "../middleware/uploadMiddleware.js";
 import { validateDelivery } from "../middleware/validateDelivery.js";
 import { generalLimiter, loginLimiter } from "../middleware/rateLimiter.js";
 const router = Router();
@@ -61,6 +65,20 @@ router.delete(
     requireJwtAuth,
     requireJwtRole("ADMIN"),
     deleteApiDelivery
+);
+// Upload payment photo
+router.post(
+    "/deliveries/:id/payment-photo",
+    requireJwtAuth,
+    paymentPhotoUpload,
+    uploadDeliveryPaymentPhoto
+);
+
+// Retrieve payment photo
+router.get(
+    "/deliveries/:id/payment-photo",
+    requireJwtAuth,
+    getDeliveryPaymentPhoto
 );
 
 export default router;

@@ -1,6 +1,8 @@
+
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { db } from "../prisma/db.js";
+import { ApiError } from "../utils/ApiError.js";
 
 export interface JwtPayload {
     id: number;
@@ -26,20 +28,25 @@ export const requireJwtAuth = async (
         const authHeader = req.headers.authorization;
 
         if (!authHeader?.startsWith("Bearer ")) {
-            res.status(401).json({
-                message: "Authentication token is required."
-            });
-            return;
+            throw new ApiError(
+                401,
+                "Authentication token is required."
+            );
         }
 
         const token = authHeader.split(" ")[1];
+
+        if (!token) {
+            throw new ApiError(
+                401,
+                "Invalid authentication token."
+            );
+        }
+
         const jwtSecret = process.env.JWT_SECRET;
 
-        if (!token || !jwtSecret) {
-            res.status(401).json({
-                message: "Invalid authentication token."
-            });
-            return;
+        if (!jwtSecret) {
+            throw new Error("JWT_SECRET is not configured.");
         }
 
         const decoded = jwt.verify(token, jwtSecret);
@@ -48,10 +55,10 @@ export const requireJwtAuth = async (
             typeof decoded === "string" ||
             typeof decoded.id !== "number"
         ) {
-            res.status(401).json({
-                message: "Invalid token payload."
-            });
-            return;
+            throw new ApiError(
+                401,
+                "Invalid token payload."
+            );
         }
 
         // Check the current user in the database
@@ -59,21 +66,27 @@ export const requireJwtAuth = async (
             .whereUnique({ id: decoded.id })
             .first();
 
-        if (!user || !user.isActive) {
-            res.status(401).json({
-                message: "User account is inactive or unavailable."
-            });
-            return;
+        if (!user) {
+            throw new ApiError(
+                401,
+                "User account is unavailable."
+            );
+        }
+
+        if (!user.isActive) {
+            throw new ApiError(
+                403,
+                "Your account has been deactivated."
+            );
         }
 
         if (user.role !== "ADMIN" && user.role !== "STAFF") {
-            res.status(403).json({
-                message: "Invalid user role."
-            });
-            return;
+            throw new ApiError(
+                403,
+                "You do not have a valid user role."
+            );
         }
 
-        // Use the current database information
         req.authUser = {
             id: user.id,
             name: user.name,
@@ -85,23 +98,25 @@ export const requireJwtAuth = async (
 
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
-            res.status(401).json({
-                message: "Your token has expired. Please log in again."
-            });
+            next(
+                new ApiError(
+                    401,
+                    "Your token has expired. Please log in again."
+                )
+            );
             return;
         }
 
         if (error instanceof jwt.JsonWebTokenError) {
-            res.status(401).json({
-                message: "Invalid authentication token."
-            });
+            next(
+                new ApiError(
+                    401,
+                    "Invalid authentication token."
+                )
+            );
             return;
         }
 
-        console.error("JWT authentication error:", error);
-
-        res.status(500).json({
-            message: "Internal server error."
-        });
+        next(error);
     }
 };

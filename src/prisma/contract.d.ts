@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'965b728f1ddd793880be309ee145b69388d8b339c43cd6a4b8ac6e952f47f2e4'>;
+  StorageHashBase<'07a5849b86e423a2910e292f7e7449ac3e6a769cc7a0fb7ef60b197c7ea6e447'>;
 export type ExecutionHash =
   ExecutionHashBase<'2b48b69c4c7a4883b807d4369377bf87d3345af0e31306742a2bf03db1404a1d'>;
 export type ProfileHash =
@@ -325,6 +325,7 @@ export namespace Models {
     customerName: FieldOutputTypes['public']['Delivery']['customerName'];
     deliveryDate: FieldOutputTypes['public']['Delivery']['deliveryDate'];
     id: FieldOutputTypes['public']['Delivery']['id'];
+    paymentPhotoPath: FieldOutputTypes['public']['Delivery']['paymentPhotoPath'];
     phone: FieldOutputTypes['public']['Delivery']['phone'];
     quantity: FieldOutputTypes['public']['Delivery']['quantity'];
     status: FieldOutputTypes['public']['Delivery']['status'];
@@ -498,6 +499,12 @@ type ContractBase = Omit<
                     readonly kind: 'function';
                     readonly expression: 'autoincrement()';
                   };
+                  readonly many: false;
+                };
+                readonly paymentPhotoPath: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
                   readonly many: false;
                 };
                 readonly phone: {
@@ -723,6 +730,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly paymentPhotoPath: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly phone: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -758,6 +769,7 @@ type ContractBase = Omit<
                 readonly customerName: { readonly column: 'customerName' };
                 readonly deliveryDate: { readonly column: 'deliveryDate' };
                 readonly id: { readonly column: 'id' };
+                readonly paymentPhotoPath: { readonly column: 'paymentPhotoPath' };
                 readonly phone: { readonly column: 'phone' };
                 readonly quantity: { readonly column: 'quantity' };
                 readonly status: { readonly column: 'status' };
